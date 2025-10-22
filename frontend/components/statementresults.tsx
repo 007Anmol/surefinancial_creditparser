@@ -1,7 +1,21 @@
 // components/StatementResults.tsx
 'use client';
 
-import { StatementData } from '@/components/types/statement';
+type Transaction = {
+  description: string;
+  amount: number;
+  date: string;
+  category?: string;
+};
+
+type StatementData = {
+  issuer_name: string;
+  card_variant_last4: string;
+  billing_cycle_dates: string;
+  payment_due_date: string;
+  total_new_balance: number;
+  transactions?: Transaction[];
+};
 
 interface StatementResultsProps {
   data: StatementData;

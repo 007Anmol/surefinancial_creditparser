@@ -1,103 +1,172 @@
-import Image from "next/image";
+// app/page.tsx
+'use client';
+
+import { useState } from 'react';
+import FileUpload from '@/components/FileUpload';
+import StatementResults from '@/components/StatementResults';
+import TransactionTable from '@/components/TransactionTable';
+import { StatementData } from '@/types/statement';
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [parsedData, setParsedData] = useState<StatementData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
+  const handleFileUpload = async (file: File) => {
+    setLoading(true);
+    setError(null);
+    setParsedData(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      // Add user_id if available (implement your auth logic)
+      const userId = getUserId(); // Placeholder function
+      if (userId) {
+        formData.append('user_id', userId);
+      }
+
+      const response = await fetch('http://localhost:8000/api/parse', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to parse statement');
+      }
+
+      const data: StatementData = await response.json();
+      setParsedData(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getUserId = (): string | null => {
+    // Implement your authentication logic here
+    // For demo purposes, using a dummy user ID
+    return 'demo_user_123';
+  };
+
+  return (
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-slate-900 mb-3">
+            Credit Card Statement Parser
+          </h1>
+          <p className="text-slate-600 text-lg">
+            Extract standardized data from Chase, Amex, Citi, Capital One, and Discover statements
+          </p>
+        </div>
+
+        {/* Navigation */}
+        <div className="flex justify-center gap-4 mb-8">
           <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/"
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
+            Upload Statement
           </a>
           <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/history"
+            className="px-6 py-2 bg-slate-200 text-slate-700 rounded-lg font-medium hover:bg-slate-300 transition"
           >
-            Read our docs
+            View History
           </a>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+
+        {/* File Upload Section */}
+        <div className="mb-8">
+          <FileUpload onFileSelect={handleFileUpload} loading={loading} />
+        </div>
+
+        {/* Error Display */}
+        {error && (
+          <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-start">
+              <svg
+                className="w-5 h-5 text-red-500 mt-0.5 mr-3"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <div>
+                <h3 className="text-red-800 font-semibold">Error</h3>
+                <p className="text-red-700">{error}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {loading && (
+          <div className="flex flex-col items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+            <p className="text-slate-600">Parsing your statement...</p>
+          </div>
+        )}
+
+        {/* Results Display */}
+        {parsedData && !loading && (
+          <div className="space-y-8">
+            <StatementResults data={parsedData} />
+            {parsedData.transactions && parsedData.transactions.length > 0 && (
+              <TransactionTable transactions={parsedData.transactions} />
+            )}
+          </div>
+        )}
+
+        {/* Instructions */}
+        {!parsedData && !loading && !error && (
+          <div className="mt-12 bg-white rounded-lg shadow-sm p-8">
+            <h2 className="text-2xl font-semibold text-slate-900 mb-4">
+              How It Works
+            </h2>
+            <div className="space-y-4 text-slate-600">
+              <div className="flex items-start">
+                <span className="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-semibold mr-4">
+                  1
+                </span>
+                <p>Upload your PDF credit card statement from a supported issuer</p>
+              </div>
+              <div className="flex items-start">
+                <span className="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-semibold mr-4">
+                  2
+                </span>
+                <p>Our system automatically detects the issuer and extracts key information</p>
+              </div>
+              <div className="flex items-start">
+                <span className="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-semibold mr-4">
+                  3
+                </span>
+                <p>View standardized data including balance, dates, and transaction details</p>
+              </div>
+              <div className="flex items-start">
+                <span className="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-semibold mr-4">
+                  4
+                </span>
+                <p>Access your parsing history anytime from the History page</p>
+              </div>
+            </div>
+            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <strong>Supported Issuers:</strong> Chase, American Express, Citibank, Capital One, Discover
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    </main>
   );
 }
